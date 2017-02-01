@@ -491,6 +491,7 @@ int plotleds(string r, string b, int id, int s)
 	double tg1max=0.;double tg1min=10000.;
 	double tg2max=0.;double tg2min=10000.;
 	double G[24][2]={{0.}};double Ge[24][2]={{0.}};
+// 	double tfmean=0.;
 	for(int i1=0;i1<24;i1++)
 	{
 		for(int i2=1;i2<=m;i2++)
@@ -501,7 +502,25 @@ int plotleds(string r, string b, int id, int s)
 			if(QTot[i1][i2-1]->GetBinCenter(QTot[i1][i2-1]->FindLastBinAbove(0))>xmaxQtot){xmaxQtot=QTot[i1][i2-1]->GetBinCenter(QTot[i1][i2-1]->FindLastBinAbove(0));}
 			
 			tf->SetLineStyle(2);
-			QTot[i1][i2-1]->Fit(tf,"q","q",1.,20000.);
+			QTot[i1][i2-1]->GetXaxis()->SetRange(1,5);
+			if(QTot[i1][i2-1]->GetMaximumBin()==1)
+			{
+				QTot[i1][i2-1]->GetXaxis()->SetRange(1,800);
+				QTot[i1][i2-1]->Fit(tf,"q","q",50.,20000.);
+				QTot[i1][i2-1]->Fit(tf,"q","q",(tf->GetParameter(1)-1.5*tf->GetParameter(2))>50.?(tf->GetParameter(1)-1.5*tf->GetParameter(2)):50.,tf->GetParameter(1)+1.5*tf->GetParameter(2));
+			}
+			else
+			{
+				QTot[i1][i2-1]->GetXaxis()->SetRange(1,800);
+				QTot[i1][i2-1]->Fit(tf,"q","q",0.,20000.);
+				QTot[i1][i2-1]->Fit(tf,"q","q",tf->GetParameter(1)-1.5*tf->GetParameter(2),tf->GetParameter(1)+1.5*tf->GetParameter(2));
+			}
+// 			tfmean=QTot[i1][i2-1]->GetXaxis()->GetBinCenter(QTot[i1][i2-1]->GetMaximumBin());
+// 			QTot[i1][i2-1]->GetXaxis()->SetRange(1,800);
+// 			tf->SetParameter(1,tfmean);tf->SetParameter(2,70.);
+// 			if(tfmean<100.) QTot[i1][i2-1]->Fit(tf,"q","q",0.,20000.);
+// 			else QTot[i1][i2-1]->Fit(tf,"q","q",25.,20000.);
+			
 			int nn=tg1[i2-1]->GetN();
 			tg1[i2-1]->SetPoint(nn,((double)(i1+1)),tf->GetParameter(1));
 			tg1[i2-1]->SetPointError(nn,0,tf->GetParError(1));
@@ -557,7 +576,33 @@ int plotleds(string r, string b, int id, int s)
 			if(NPETot[i1][i2-1]->GetBinCenter(NPETot[i1][i2-1]->FindLastBinAbove(0))>xmaxNPE){xmaxNPE=NPETot[i1][i2-1]->GetBinCenter(NPETot[i1][i2-1]->FindLastBinAbove(0));}
 			
 			tf->SetLineStyle(2);
-			NPETot[i1][i2-1]->Fit(tf,"q","q",1.,500.);
+			NPETot[i1][i2-1]->GetXaxis()->SetRange(1,5);
+			if(NPETot[i1][i2-1]->GetMaximumBin()==1)
+			{
+				NPETot[i1][i2-1]->GetXaxis()->SetRange(1,500);
+				if((NPETot[i1][i2-1]->Integral(1,3)/NPETot[i1][i2-1]->Integral())>0.8)
+				{
+					NPETot[i1][i2-1]->Fit(tf,"q","q",0.,500.);
+					NPETot[i1][i2-1]->Fit(tf,"q","q",tf->GetParameter(1)-1.5*tf->GetParameter(2),tf->GetParameter(1)+1.5*tf->GetParameter(2));
+				}
+				else
+				{
+					NPETot[i1][i2-1]->Fit(tf,"q","q",2.,500.);
+					NPETot[i1][i2-1]->Fit(tf,"q","q",(tf->GetParameter(1)-1.5*tf->GetParameter(2))>2.?(tf->GetParameter(1)-1.5*tf->GetParameter(2)):2.,tf->GetParameter(1)+1.5*tf->GetParameter(2));
+				}
+			}
+			else
+			{
+				NPETot[i1][i2-1]->GetXaxis()->SetRange(1,800);
+				NPETot[i1][i2-1]->Fit(tf,"q","q",0.,500.);
+				NPETot[i1][i2-1]->Fit(tf,"q","q",tf->GetParameter(1)-1.5*tf->GetParameter(2),tf->GetParameter(1)+1.5*tf->GetParameter(2));
+			}
+// 			tfmean=NPETot[i1][i2-1]->GetXaxis()->GetBinCenter(NPETot[i1][i2-1]->GetMaximumBin());
+// 			NPETot[i1][i2-1]->GetXaxis()->SetRange(1,500);
+// 			tf->SetParameter(1,tfmean);tf->SetParameter(2,3.);
+// 			if(tfmean<5.) NPETot[i1][i2-1]->Fit(tf,"q","q",0.,500.);
+// 			else NPETot[i1][i2-1]->Fit(tf,"q","q",1.,500.);
+			
 			int nn=tg3[i2-1]->GetN();
 			tg3[i2-1]->SetPoint(nn,((double)(i1+1)),tf->GetParameter(1));
 			tg3[i2-1]->SetPointError(nn,0,tf->GetParError(1));
@@ -766,7 +811,7 @@ int plotleds(string r, string b, int id, int s)
 // 	delete cc3;delete cc5;
 }
 
-int ledcomp(vector <string> r, vector <int> s)//beware when comparing runs of different modes
+string ledcomp(vector <string> r, vector <int> s)//beware when comparing runs of different modes
 {
 	char hname[300];
 	TF1* tf=new TF1("gaus","gaus",0.,100000.);
@@ -774,6 +819,7 @@ int ledcomp(vector <string> r, vector <int> s)//beware when comparing runs of di
 	TGraphErrors* tg2[3][2];
 	TGraphErrors* tg3[3][2];
 	TGraphErrors* tg4[3][2];
+	TGraphErrors* tgg[3][2];
 	
 	vector <string> b;vector <int> id;vector <int> m;
 	ifstream infile("RunList.txt");
@@ -800,6 +846,19 @@ int ledcomp(vector <string> r, vector <int> s)//beware when comparing runs of di
 	
 	int colors[3]={1,2,4};
 	TH1F* QTot[3][24][2];TH1F* NPE[3][24][2];
+	double gains[3][24][2][2]={{{{0.}}}};
+	TF1 *fit;
+	
+	for(int ii1=0;ii1<r.size();ii1++)
+	{
+		for(int i2=1;i2<=m[ii1];i2++)
+		{
+			tgg[ii1][i2-1]=new TGraphErrors();
+			tgg[ii1][i2-1]->SetMarkerStyle(24+(i2-1));
+			tgg[ii1][i2-1]->SetMarkerColor(colors[i2]);
+		}
+	}
+	
 	TFile* inroot[3];
 	string gnames[2]={"1+2","3+4"};
 	double qtotmax[2]={0.,0.};double npemax[2]={0.,0.};//x, y
@@ -818,6 +877,9 @@ int ledcomp(vector <string> r, vector <int> s)//beware when comparing runs of di
 				QTot[ii1][i1][i2-1]->SetLineColor(colors[ii1]);
 				if(QTot[ii1][i1][i2-1]->GetBinContent(QTot[ii1][i1][i2-1]->GetMaximumBin())>qtotmax[1]){qtotmax[1]=QTot[ii1][i1][i2-1]->GetBinContent(QTot[ii1][i1][i2-1]->GetMaximumBin());}
 				if(QTot[ii1][i1][i2-1]->GetBinCenter(QTot[ii1][i1][i2-1]->FindLastBinAbove(0))>qtotmax[0]){qtotmax[0]=QTot[ii1][i1][i2-1]->GetBinCenter(QTot[ii1][i1][i2-1]->FindLastBinAbove(0));}
+				fit=QTot[ii1][i1][i2-1]->GetFunction("gaus");
+				gains[ii1][i1][i2-1][0]=pow(fit->GetParameter(2),2.)/(1.15*fit->GetParameter(1));
+				gains[ii1][i1][i2-1][1]=gains[ii1][i1][i2-1][0]*sqrt(pow(2.*fit->GetParError(2)/fit->GetParameter(2),2.)+pow(fit->GetParError(1)/fit->GetParameter(1),2.));
 				
 				sprintf(hname,"NPETot %s",ChNames[i1][m[ii1]+i2-2].c_str());
 				inroot[ii1]->GetObject(hname,NPE[ii1][i1][i2-1]);
@@ -859,6 +921,20 @@ int ledcomp(vector <string> r, vector <int> s)//beware when comparing runs of di
 					de=TMath::LocMin(tg4[ii1][i2-1]->GetN(),tg4[ii1][i2-1]->GetY());
 					if(tg4[ii1][i2-1]->GetY()[de]<tgsmaxmin[3][1]){tgsmaxmin[3][1]=tg4[ii1][i2-1]->GetY()[de];}
 				}
+			}
+		}
+	}
+	double tggmaxmin[2]={0.,1000.};
+	for(int ii1=0;ii1<r.size();ii1++)
+	{
+		for(int i2=1;i2<=m[ii1];i2++)
+		{
+			for(int i1=0;i1<24;i1++)
+			{
+				tgg[ii1][i2-1]->SetPoint(i1,((double)(i1+1)),gains[ii1][i1][i2-1][0]);
+				tgg[ii1][i2-1]->SetPointError(i1,0.,gains[ii1][i1][i2-1][1]);
+				if(gains[ii1][i1][i2-1][0]>tggmaxmin[0]){tggmaxmin[0]=gains[ii1][i1][i2-1][0];}
+				if(gains[ii1][i1][i2-1][0]<tggmaxmin[1]){tggmaxmin[1]=gains[ii1][i1][i2-1][0];}
 			}
 		}
 	}
@@ -912,7 +988,7 @@ int ledcomp(vector <string> r, vector <int> s)//beware when comparing runs of di
 	
 	TCanvas* cc2=new TCanvas("cc2","cc2",900,1200);
 	gStyle->SetOptStat(0);
-	cc2->Divide(r.size(),4,0,0);
+	cc2->Divide(r.size(),5,0,0);
 	tci1=1;
 	for(int ii1=0;ii1<r.size();ii1++)
 	{
@@ -955,6 +1031,16 @@ int ledcomp(vector <string> r, vector <int> s)//beware when comparing runs of di
 		if(m[ii1]==2) tg4[ii1][1]->Draw("same P");
 		tci1++;
 	}
+	for(int ii1=0;ii1<r.size();ii1++)
+	{
+		cc2->cd(tci1);
+		tgg[ii1][0]->Draw("AP");tgg[ii1][0]->GetYaxis()->SetRangeUser(tggmaxmin[1]-5.,tggmaxmin[0]+5.);
+		tgg[ii1][0]->GetXaxis()->SetTitle("PMT ID");tgg[ii1][0]->GetXaxis()->CenterTitle();
+		tgg[ii1][0]->GetYaxis()->SetTitle("Gain (fC)");tgg[ii1][0]->GetYaxis()->CenterTitle();
+		gPad->SetGridy(1);gPad->SetGridx(1);
+		if(m[ii1]==2) tgg[ii1][1]->Draw("same P");
+		tci1++;
+	}
 	sprintf(hname,"%s)",pdfname);
 	cc2->Print(hname);
 	
@@ -963,6 +1049,7 @@ int ledcomp(vector <string> r, vector <int> s)//beware when comparing runs of di
 	system(hname);
 	
 	delete cc1;delete cc2;
+	return b[0];
 }
 
 int ifcomp(vector <string> r, vector <int> s)
@@ -996,6 +1083,7 @@ int ifcomp(vector <string> r, vector <int> s)
 	TGraphErrors* tg2;
 	TGraphErrors* tg3[2];
 	TGraphErrors* tg4;
+	TGraphErrors* tg5[3];
 	
 	sprintf(hname,"../Histos/%s/LEDs_%d_%s.root",b[0].c_str(),id[0],r[0].c_str());inroot[0]=new TFile(hname);
 	sprintf(hname,"../Histos/%s/LEDs_%d_%s.root",b[1].c_str(),id[1],r[1].c_str());inroot[1]=new TFile(hname);
@@ -1036,9 +1124,67 @@ int ifcomp(vector <string> r, vector <int> s)
 		tg4->SetPointError(i1,0.,sqrt(2.*(pow(tg3[1]->GetY()[i1],2.)+pow(tg3[0]->GetY()[i1],2.))*(pow(tg3[1]->GetEY()[i1],2.)+pow(tg3[0]->GetEY()[i1],2.)))/(pow(tg3[1]->GetY()[i1]+tg3[0]->GetY()[i1],2.)));
 	}
 	
+	TFile* gainroot=new TFile("../Gains/Gains.root");
+	TTree *gtree = (TTree*)gainroot->Get("Gains");
+	gtree->SetBranchAddress("BoxName",&g.BoxName);
+	gtree->SetBranchAddress("BoxBarcode",&g.BoxBarcode);
+	gtree->SetBranchAddress("PMTName",&g.PMTName);
+	gtree->SetBranchAddress("PMTSerial",&g.PMTSerial);
+	gtree->SetBranchAddress("l2014",&g.l2014);
+	gtree->SetBranchAddress("il",&g.il);
+	gtree->SetBranchAddress("ilV2",&g.ilV2);
+	gtree->SetBranchAddress("ih",&g.ih);
+	gtree->SetBranchAddress("ihV2",&g.ihV2);
+	gtree->SetBranchAddress("fl",&g.fl);
+	gtree->SetBranchAddress("fl2",&g.fl2);
+	gtree->SetBranchAddress("flV2",&g.flV2);
+	gtree->SetBranchAddress("fh",&g.fh);
+	gtree->SetBranchAddress("fhV2",&g.fhV2);
+	
+	tg5[0]=new TGraphErrors();tg5[1]=new TGraphErrors();tg5[2]=new TGraphErrors();
+	
+// 	double XY5[3][2][24]={{{0.}}};
+// 	double XYx[2][24]={{0.}};
+	for(int i=0;i<gtree->GetEntries();i++)
+	{
+		gtree->GetEntry(i);
+		if(*g.BoxBarcode==b[0])
+		{
+			for(int i1=0;i1<24;i1++)
+			{
+				if(*g.PMTName==ChNames[i1][0])
+				{
+// 					XY5[0][0][i1]=g.il[0]*1.6/10000.;XY5[0][1][i1]=g.il[1]*1.6/10000.;
+// 					XY5[1][0][i1]=g.fl2[0][0]*1.6/10000.;XY5[1][1][i1]=g.fl2[0][1]*1.6/10000.;
+// 					XY5[2][0][i1]=g.fl2[1][0]*1.6/10000.;XY5[2][1][i1]=g.fl2[1][1]*1.6/10000.;
+// 					
+// 					XYx[0][i1]=((double)(i1+1));
+// 					XYx[1][i1]=0.;
+					
+					tg5[0]->SetPoint(i1,((double)(i1+1)),g.il[0]*1.6/10000.);
+					tg5[0]->SetPointError(i1,0.,g.il[1]*1.6/10000.);
+					tg5[1]->SetPoint(i1,((double)(i1+1)),g.fl2[0][0]*1.6/10000.);
+					tg5[1]->SetPointError(i1,0.,g.fl2[0][1]*1.6/10000.);
+					tg5[2]->SetPoint(i1,((double)(i1+1)),g.fl2[1][0]*1.6/10000.);
+					tg5[2]->SetPointError(i1,0.,g.fl2[1][1]*1.6/10000.);
+				}
+			}
+		}
+	}
+	gainroot->Close();
+	
+// 	for(int i1=0;i1<tg5[0]->GetN();i1++)
+// 	{
+// 		cout<<i1<<" "<<tg5[0]->GetX()[i1]<<" "<<tg5[0]->GetY()[i1]<<endl;
+// 	}
+	
+// 	tg5[0]=new TGraphErrors(24,XYx[0],XY5[0][0],XYx[1],XY5[0][1]);
+// 	tg5[1]=new TGraphErrors(24,XYx[0],XY5[1][0],XYx[1],XY5[1][1]);
+// 	tg5[2]=new TGraphErrors(24,XYx[0],XY5[2][0],XYx[1],XY5[2][1]);
+	
 	TCanvas* cc2=new TCanvas("cc2","cc2",900,1200);
 	gStyle->SetOptStat(0);
-	cc2->Divide(1,3,0,0);
+	cc2->Divide(1,4,0,0);
 	cc2->cd(1);
 	tg1[0]->Draw("AP");
 	tg1[0]->GetYaxis()->SetRangeUser(tg1maxmin[1]-10.,tg1maxmin[0]+10.);
@@ -1073,6 +1219,29 @@ int ifcomp(vector <string> r, vector <int> s)
 	if(tg4->GetY()[dd]>tg4maxmin[0]){tg4maxmin[0]=tg4->GetY()[dd];}
 	if(tg4->GetY()[de]<tg4maxmin[1]){tg4maxmin[1]=tg4->GetY()[de];}
 	tg4->GetYaxis()->SetRangeUser(tg4maxmin[1],tg4maxmin[0]);
+	cc2->cd(4);
+	tg5[0]->SetMarkerStyle(24);tg5[0]->SetMarkerColor(1);tg5[0]->SetLineColor(1);
+	tg5[1]->SetMarkerStyle(25);tg5[1]->SetMarkerColor(2);tg5[1]->SetLineColor(2);
+	tg5[2]->SetMarkerStyle(26);tg5[2]->SetMarkerColor(4);tg5[2]->SetLineColor(4);
+	tg5[0]->Draw("AP");tg5[1]->Draw("same P");tg5[2]->Draw("same P");
+	tg5[0]->GetXaxis()->SetTitle("PMT ID");tg5[0]->GetXaxis()->CenterTitle();
+	tg5[0]->GetYaxis()->SetTitle("SPE Charge (fC)");tg5[0]->GetYaxis()->CenterTitle();
+	gPad->SetGridy(1);gPad->SetGridx(1);
+	tg5[0]->GetYaxis()->SetLabelSize(0.06);
+	tg5[0]->GetYaxis()->SetTitleSize(0.05);
+	tg5[0]->GetXaxis()->SetLabelSize(0.06);
+	tg5[0]->GetXaxis()->SetTitleSize(0.05);
+	double tg5maxmin[2]={10.,50.};
+	dd=TMath::LocMax(tg5[0]->GetN(),tg5[0]->GetY());de=TMath::LocMin(tg5[0]->GetN(),tg5[0]->GetY());
+	if(tg5[0]->GetY()[dd]>tg5maxmin[0]){tg5maxmin[0]=tg5[0]->GetY()[dd];}
+	if(tg5[0]->GetY()[de]<tg5maxmin[1]){tg5maxmin[1]=tg5[0]->GetY()[de];}
+	dd=TMath::LocMax(tg5[1]->GetN(),tg5[1]->GetY());de=TMath::LocMin(tg5[1]->GetN(),tg5[1]->GetY());
+	if(tg5[1]->GetY()[dd]>tg5maxmin[0]){tg5maxmin[0]=tg5[1]->GetY()[dd];}
+	if(tg5[1]->GetY()[de]<tg5maxmin[1]){tg5maxmin[1]=tg5[1]->GetY()[de];}
+	dd=TMath::LocMax(tg5[2]->GetN(),tg5[2]->GetY());de=TMath::LocMin(tg5[2]->GetN(),tg5[2]->GetY());
+	if(tg5[2]->GetY()[dd]>tg5maxmin[0]){tg5maxmin[0]=tg5[2]->GetY()[dd];}
+	if(tg5[2]->GetY()[de]<tg5maxmin[1]){tg5maxmin[1]=tg5[2]->GetY()[de];}
+	tg5[0]->GetYaxis()->SetRangeUser(tg5maxmin[1]-5.,tg5maxmin[0]+5.);
 	
 	sprintf(hname,"IFComp_%s_%s_%d_%s_%d.pdf",b[0].c_str(),r[0].c_str(),s[0],r[1].c_str(),s[1]);
 	cc2->Print(hname);
@@ -1385,6 +1554,7 @@ int finalplots(string b)
 		}
 	}
 	TCanvas* cc=new TCanvas("cc","cc",500,500);
+	gStyle->SetOptStat(0);
 	TH1F* hNPE[24][3];TH1F* hFrac[24][2];
 	int colors[3]={1,2,4};
 	double npexymax[2]={0.};
@@ -1394,8 +1564,11 @@ int finalplots(string b)
 		{
 			sprintf(hname,"NPETot %s",ChNames[i1][0].c_str());
 			ff[i2]->GetObject(hname,hNPE[i1][i2]);hNPE[i1][i2]->SetLineColor(colors[i2]);
-			if(hNPE[i1][i2]->GetBinCenter(hNPE[i1][i2]->FindLastBinAbove(0.))>npexymax[0]){npexymax[0]=hNPE[i1][i2]->GetBinCenter(hNPE[i1][i2]->FindLastBinAbove(0.));}
-			if(hNPE[i1][i2]->GetBinContent(hNPE[i1][i2]->GetMaximumBin())>npexymax[1]){npexymax[1]=hNPE[i1][i2]->GetBinContent(hNPE[i1][i2]->GetMaximumBin());}
+			if(i2!=1)
+			{
+				if(hNPE[i1][i2]->GetBinCenter(hNPE[i1][i2]->FindLastBinAbove(0.))>npexymax[0]){npexymax[0]=hNPE[i1][i2]->GetBinCenter(hNPE[i1][i2]->FindLastBinAbove(0.));}
+				if(hNPE[i1][i2]->GetBinContent(hNPE[i1][i2]->GetMaximumBin())>npexymax[1]){npexymax[1]=hNPE[i1][i2]->GetBinContent(hNPE[i1][i2]->GetMaximumBin());}
+			}
 			if(i2>0)
 			{
 				sprintf(hname,"Frac %s",ChNames[i1][0].c_str());
@@ -1406,14 +1579,18 @@ int finalplots(string b)
 	outroot->cd();
 	for(int i1=0;i1<24;i1++)
 	{
-		hNPE[i1][0]->Draw();hNPE[i1][1]->Draw("same");hNPE[i1][2]->Draw("same");
+		hNPE[i1][0]->Draw();
+// 		hNPE[i1][1]->Draw("same");
+		hNPE[i1][2]->Draw("same");
 		hNPE[i1][0]->GetXaxis()->SetRangeUser(0.,npexymax[0]+10.);
 		hNPE[i1][0]->GetYaxis()->SetRangeUser(0.,npexymax[1]+200.);
 		hNPE[i1][0]->GetYaxis()->SetTitleOffset(1.5);
 		sprintf(hname,"LEDComp_%d.png",i1);
 		cc->SaveAs(hname);
-		hFrac[i1][0]->Draw();hFrac[i1][1]->Draw("same");
-		hFrac[i1][0]->GetYaxis()->SetTitleOffset(1.5);
+// 		hFrac[i1][0]->Draw();hFrac[i1][1]->Draw("same");
+		hFrac[i1][1]->Draw();
+// 		hFrac[i1][0]->GetYaxis()->SetTitleOffset(1.5);
+		hFrac[i1][1]->GetYaxis()->SetTitleOffset(1.5);
 		sprintf(hname,"LEDfrac_%d.png",i1);
 		cc->SaveAs(hname);
 		sprintf(hname,"%s Initial LED",hNPE[i1][0]->GetName());hNPE[i1][0]->SetName(hname);
@@ -1461,6 +1638,7 @@ int finalplots(string b)
 				ovP[i1]->Fill(i3,hovH->GetBinCenter(i4)+300,hovH->GetBinContent(i4));
 			}
 		}
+		gStyle->SetPalette(kRainBow);
 		ovP[i1]->Draw("colz");
 		sprintf(hname,"OvernightPulses_%d.png",i1);
 		cc->SaveAs(hname);
@@ -1484,6 +1662,7 @@ int finalplots(string b)
 				ovH[i1]->Fill(i3,hovH->GetBinCenter(i4)+600,hovH->GetBinContent(i4));
 			}
 		}
+		gStyle->SetPalette(kRainBow);
 		ovH[i1]->Draw("colz");
 		sprintf(hname,"OvernightNPEs_%d.png",i1);
 		cc->SaveAs(hname);
@@ -1622,6 +1801,85 @@ int npediff()
 	
 }
 
+int insertPreSignoff(vector <string> r, vector <int> s)
+{
+	string b=ledcomp(r,s);
+	cout<<b<<endl;
+	char hname[1000];
+	sprintf(hname,"mv ../Plots/Others/LEDs_%s_%d_%s_%d.pdf ../Plots/%s/PreSignOff.pdf",r[0].c_str(),s[0],r[1].c_str(),s[1],b.c_str());
+	system(hname);
+	sprintf(hname,"../Plots/%s/LEDGains_%s_10_%s.txt",b.c_str(),b.c_str(),r[1].c_str());
+	ifstream infile(hname);
+	calib cn;double G[24][3]={{0.}};double Ge[24][3]={{0.}};
+	while(!infile.eof())
+	{
+		infile>>cn.pmt>>cn.g>>cn.e;
+		for(int i1=0;i1<24;i1++)
+		{
+			for(int i2=0;i2<3;i2++)
+			{
+				if(cn.pmt==ChNames[i1][i2]){G[i1][i2]=cn.g;Ge[i1][i2]=cn.e;}
+			}
+		}
+	}
+	
+	TFile* gainroot=new TFile("../Gains/Gains.root");
+	TTree *gtree = (TTree*)gainroot->Get("Gains");
+	gtree->SetBranchAddress("BoxName",&g.BoxName);
+	gtree->SetBranchAddress("BoxBarcode",&g.BoxBarcode);
+	gtree->SetBranchAddress("PMTName",&g.PMTName);
+	gtree->SetBranchAddress("PMTSerial",&g.PMTSerial);
+	gtree->SetBranchAddress("l2014",&g.l2014);
+	gtree->SetBranchAddress("il",&g.il);
+	gtree->SetBranchAddress("ilV2",&g.ilV2);
+	gtree->SetBranchAddress("ih",&g.ih);
+	gtree->SetBranchAddress("ihV2",&g.ihV2);
+	gtree->SetBranchAddress("fl",&g.fl);
+	gtree->SetBranchAddress("fl2",&g.fl2);
+	gtree->SetBranchAddress("flV2",&g.flV2);
+	gtree->SetBranchAddress("fh",&g.fh);
+	gtree->SetBranchAddress("fhV2",&g.fhV2);
+	
+	TFile* goutroot=new TFile("../Gains/Gains_out.root","recreate");
+	TTree* treeout = new TTree("Gains", "Gains");
+	treeout->Branch("BoxName", &g.BoxName);
+	treeout->Branch("BoxBarcode", &g.BoxBarcode);
+	treeout->Branch("PMTName", &g.PMTName);
+	treeout->Branch("PMTSerial", &g.PMTSerial);
+	treeout->Branch("l2014", g.l2014, "l2014[2]/F");
+	treeout->Branch("il", g.il, "il[2]/F");
+	treeout->Branch("ilV2", g.ilV2, "ilV2[2]/F");
+	treeout->Branch("ih", g.ih, "ih[2]/F");
+	treeout->Branch("ihV2", g.ihV2, "ihV2[2]/F");
+	treeout->Branch("fl", g.fl, "fl[2][2]/F");
+	treeout->Branch("fl2", g.fl2, "fl2[2][2]/F");
+	treeout->Branch("flV2", g.flV2, "flV2[2][2]/F");
+	treeout->Branch("fh", g.fh, "fh[2][2]/F");
+	treeout->Branch("fhV2", g.fhV2, "fhV2[2][2]/F");
+	
+	for(int i=0;i<gtree->GetEntries();i++)
+	{
+		gtree->GetEntry(i);
+		if(*g.BoxBarcode==b)
+		{
+			for(int i1=0;i1<24;i1++)
+			{
+				if(*g.PMTName==ChNames[i1][0])
+				{
+					cout<<ChNames[i1][0]<<" "<<g.fl2[0][0]<<" "<<G[i1][1]<<" "<<g.fl2[1][0]<<" "<<G[i1][2]<<endl;
+					g.fl2[0][0]=G[i1][1];g.fl2[0][1]=Ge[i1][1];g.fl2[1][0]=G[i1][2];g.fl2[1][1]=Ge[i1][2];
+				}
+			}
+		}
+		treeout->Fill();
+	}
+	goutroot->cd();
+	goutroot->Write();
+	goutroot->Close();
+	gainroot->Close();
+	system("mv ../Gains/Gains_out.root ../Gains/Gains.root");
+}
+
 int main(int argc, char *argv[])
 {
 	int opt=atoi(argv[1]);
@@ -1753,6 +2011,38 @@ int main(int argc, char *argv[])
 		RL.pop_back();
 		infile.close();
 		npediff();
+	}
+	else if(opt==8)//plot specific types // 0 ped, 1 led (not overnight), 2 histos, 3 overnight, 4 finals
+	{
+		int opt2=atoi(argv[2]);
+		ifstream infile("RunList.txt");
+		while(!infile.eof())
+		{
+			infile>>rl.runno>>rl.b[0]>>rl.t[0]>>rl.b[1]>>rl.t[1]>>rl.b[2]>>rl.t[2]>>rl.date>>rl.time;
+			RL.push_back(rl);
+		}
+		RL.pop_back();
+		infile.close();
+		for(int i2=0;i2<RL.size();i2++)
+		{
+			cout<<"Run: "<<RL[i2].runno<<endl;
+			for(int i3=0;i3<3;i3++)
+			{
+				if(opt2==0 && (RL[i2].t[i3]==1 || RL[i2].t[i3]==3 || RL[i2].t[i3]==5 || RL[i2].t[i3]==9)){plotpeds(RL[i2].runno,RL[i2].b[i3],RL[i2].t[i3],i3);}
+				if(opt2==1 && (RL[i2].t[i3]==2 || RL[i2].t[i3]==4 || RL[i2].t[i3]==6 ||RL[i2].t[i3]==14 || RL[i2].t[i3]==17 || RL[i2].t[i3]==10)){plotleds(RL[i2].runno,RL[i2].b[i3],RL[i2].t[i3],i3);}
+				if(opt2==2 && (RL[i2].t[i3]==12 || RL[i2].t[i3]==13 || RL[i2].t[i3]==15 || RL[i2].t[i3]==16 || RL[i2].t[i3]==11)){plothistos(RL[i2].runno,RL[i2].b[i3],RL[i2].t[i3],i3);}
+				if(opt2==3 && (RL[i2].t[i3]==7 || RL[i2].t[i3]==8)){plotleds(RL[i2].runno,RL[i2].b[i3],RL[i2].t[i3],i3);}
+				if(opt2==4 && RL[i2].t[i3]==17){finalplots(RL[i2].b[i3]);}
+			}
+		}
+	}
+	else if(opt==9)//replace fl2 with pre sign-off
+	{
+		vector <string> RunNos;
+		vector <int> stations;
+		RunNos.push_back(argv[2]);stations.push_back(atoi(argv[3]));
+		if(argc>4){RunNos.push_back(argv[4]);stations.push_back(atoi(argv[5]));}
+		insertPreSignoff(RunNos,stations);
 	}
 }
 

@@ -18,6 +18,8 @@ process.source = cms.Source("HcalTBSource",
     )
 )
 
+#process.source = cms.Source("HcalTBSource",fileNames = cms.untracked.vstring('root://eoscms//eos/cms/store/group/dpg_hcal/comm_hcal/SX5/HF/PMT/SX5_'+runNumber+'.root'))
+
 process.options = cms.untracked.PSet(
         wantSummary = cms.untracked.bool(False)
         )

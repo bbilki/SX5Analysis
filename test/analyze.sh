@@ -25,6 +25,11 @@ then
 	mkdir Plots
 fi
 
+if [ ! -d Plots/Others ]
+then
+	mkdir Plots/Others
+fi
+
 if [ ! -d NTuples ]
 then
 	mkdir NTuples
@@ -35,7 +40,7 @@ plotfilename="Files/PlotList.txt"
 rt=( 0 1 2 1 2 1 2 2 2 1 2 3 3 3 2 3 3 2 )
 while read -r -a l
 do
-	if [ ${l[0]} -gt 1214 ]
+	if [ ${l[0]} -gt 1530 ]
 	then
 		if [ ! -f Data/SX5_${l[0]}.root ]
 		then
